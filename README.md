@@ -80,12 +80,12 @@ uno-engine/
 │   ├── Player.h   
 │   ├── Functions.h   
 ├── src/
-│   ├── Card.c    
-│   ├── Deck.c  
-│   ├── Game.c       
-│   ├── Player.c
-│   ├── Functions.c        
-│   ├── main.c    
+│   ├── Card.cpp    
+│   ├── Deck.cpp 
+│   ├── Game.cpp       
+│   ├── Player.cpp
+│   ├── Functions.cpp        
+│   ├── main.cpp   
 ├── LICENSE      
 └── README.md  
 ```
