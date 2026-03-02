@@ -72,15 +72,22 @@ Entities such as the `Deck` and `Player` hands utilize `std::vector` for memory-
 ## Project Structure
 
 ```text
-Project - UNO/
-├── Card.h / Card.cpp
-├── Deck.h / Deck.cpp
-├── Game.h / Game.cpp
-├── Player.h / Player.cpp
-├── functions.h / functions.cpp
-├── main.cpp
-├── LICENSE
-└── README.md
+uno-engine/
+├── include/
+│   ├── Card.h     
+│   ├── Deck.h  
+│   ├── Game.h        
+│   ├── Player.h   
+│   ├── Functions.h   
+├── src/
+│   ├── Card.c    
+│   ├── Deck.c  
+│   ├── Game.c       
+│   ├── Player.c
+│   ├── Functions.c        
+│   ├── main.c    
+├── LICENSE      
+└── README.md  
 ```
 
 ---
@@ -160,7 +167,7 @@ The engine inherently enforces strict standard UNO rules.
 
 ## License
 
-This project is licensed under the MIT License — see the LICENSE file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
