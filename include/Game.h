@@ -33,6 +33,8 @@ public :
     void chooseColor();
 
     int getCurrentPlayer() const;
+
+    ~Game();
 };
 
 #endif
