@@ -1,176 +1,242 @@
-<h1 align="center">Project - UNO</h1>
-
-<p align="center">
-  <b>A custom-built, object-oriented C++ engine simulating the classic UNO card game ruleset.</b>
-</p>
-
-<p align="center">
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
-  </a>
-  <a href="https://en.wikipedia.org/wiki/C%2B%2B">
-    <img src="https://img.shields.io/badge/Language-C%2B%2B-blue.svg" alt="Language: C++">
-  </a>
-  <img src="https://img.shields.io/badge/platform-win%20%7C%20mac%20%7C%20linux-lightgrey.svg" alt="Platform">
-</p>
+<div align="center">
+  <h1>🃏 UNO</h1>
+  <p>
+    <strong>A fully featured, terminal-based implementation of the classic UNO card game built entirely from scratch in C++.</strong>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/C++-17+-blue.svg?logo=c%2B%2B" alt="C++" />
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
+    <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg" alt="Platform" />
+    <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status" />
+    <img src="https://img.shields.io/badge/Dependencies-None-orange.svg" alt="Zero Dependencies" />
+  </p>
+</div>
 
 ---
 
-Project - UNO is a lightweight, strictly typed card game simulation engine written entirely in C++. It was designed to practically explore Object-Oriented Programming (OOP) architectures, polymorphic execution, state management, and event-driven rule processing within a terminal environment.
+## 📖 Overview
 
-Unlike simple procedural scripts, this project implements a highly formalized component architecture. It isolates game state, rule enforcement, and entity data into discrete, extensible classes, serving as an exploration of game loop mechanics and memory-safe container management in C++.
+**UNO** is a complete, terminal-based implementation of the classic UNO card game, written entirely in C++. It supports 2–10 players in a shared-screen hot-seat format, faithfully reproducing all standard UNO rules — including action cards, wild cards, color selection, forced draws, skip and reverse mechanics, and automatic turn management.
+
+### 🛠️ Built 100% From Scratch in C++
+
+Every component of the game is a custom, hand-written C++ implementation with no third-party game or UI libraries involved:
+
+- **Zero External Dependencies** — No game frameworks, no GUI toolkits, no external card libraries. Pure C++ and the standard library.
+- **Polymorphic Card Hierarchy** — All seven card types (`NumberCard`, `SkipCard`, `ReverseCard`, `DrawTwoCard`, `WildCard`, `WildDrawFourCard`) inherit from a common `Card` base class. Each overrides `isPlayable()`, `applyEffect()`, and `display()` independently.
+- **Object-Oriented Game Engine** — The `Game` class encapsulates all runtime state: turn order, direction, the active top card, the discard pile, and player references. All card effects interact with the game exclusively through the `Game` interface.
+- **Live Deck with Random Draw** — The `Deck` builds the full 108-card standard UNO deck on construction and supports random-index card removal, accurately simulating a shuffled draw pile.
+- **Discard Pile & Memory Management** — Played cards are tracked in a discard pile and properly cleaned up at game end. The ownership model ensures no card is double-freed between the player's hand, the top card slot, and the discard pile.
+- **Terminal Card Rendering** — Each card renders itself as an ASCII art block in the terminal, with color label, card name, and value displayed in a consistent bordered frame.
 
 ---
 
-## Quick Example
+## ⚙️ Architecture
 
-The engine handles turn progression, effects, and validation natively. Here is a conceptual visualization of the local execution flow:
+The game is structured as a clean object-oriented pipeline. Each class owns a single, well-defined responsibility:
 
-```cpp
-// Initialize Deck and Game state
-Deck mainDeck;
-std::vector<Player> players(2);
-std::vector<Player*> playerPtrs = { &players[0], &players[1] };
-Game unoEngine(2, &mainDeck, playerPtrs);
-
-// Engine dictates turn logic and polymorphic card effects
-unoEngine.displayTopCard();
-int turn = unoEngine.getCurrentPlayer();
-
-// If player plays a Reverse Card:
-Card* playedCard = players[turn].getCard(0);
-if (playedCard->isPlayable(unoEngine.getTopCard())) {
-    players[turn].playCard(0, unoEngine);
-    unoEngine.advanceTurn();
-}
+```
+  main.cpp
+     │
+     ▼
+  ┌──────────────┐
+  │  functions   │  mainMenu(), startGame(), setPlayers(), displayRules()
+  │  functions.cpp│  Top-level game flow and user interaction loop
+  └──────┬───────┘
+         │
+         ▼
+  ┌──────────────────┐
+  │  Game            │  Runtime state machine — turn order, direction,
+  │  Game.cpp        │  top card, discard pile, player references
+  └──────┬───────────┘
+         │
+         ├──────────────────────────┬──────────────────────────┐
+         ▼                          ▼                          ▼
+  ┌─────────────────┐   ┌──────────────────────┐   ┌──────────────────┐
+  │  Player         │   │  Deck                │   │  Card Hierarchy  │
+  │  Player.cpp     │   │  Deck.cpp            │   │  Card.cpp        │
+  │                 │   │                      │   │                  │
+  │  Hand management│   │  108-card standard   │   │  Base Card +     │
+  │  card play,     │   │  UNO deck; random    │   │  6 derived types;│
+  │  draw, display  │   │  draw, card removal  │   │  polymorphic     │
+  └─────────────────┘   └──────────────────────┘   │  effects &       │
+                                                    │  playability     │
+                                                    └──────────────────┘
 ```
 
 ---
 
-## Architecture & Execution Pipeline
+## ✨ Features
 
-The UNO engine utilizes a strict Object-Oriented pipeline emphasizing encapsulated state modification and polymorphic rule resolution.
+### 🃏 Full Card Set — 108 Cards
 
-### 1. Polymorphic Rule Execution (The Card System)
+The deck is constructed exactly to the UNO standard on every new game:
 
-Instead of relying on massive, brittle `switch` statements to determine what a card does, the engine utilizes inheritance. The base class `Card` defines a virtual `applyEffect(Game&)` and `isPlayable()`. Derived classes (`SkipCard`, `ReverseCard`, `WildDrawFourCard`) override these methods to directly manipulate the `Game` state upon play, ensuring O(1) rule resolution and absolute decoupling.
+| Card Type | Count | Effect |
+|---|---|---|
+| Number (0–9, 4 colors) | 76 | Match by color or number |
+| Skip (4 colors × 2) | 8 | Next player loses their turn |
+| Reverse (4 colors × 2) | 8 | Reverses the direction of play |
+| Draw Two (4 colors × 2) | 8 | Next player draws 2 cards and is skipped |
+| Wild | 4 | Current player chooses the new active color |
+| Wild Draw Four | 4 | Choose color; next player draws 4 and is skipped |
 
-### 2. State & Event Dispatcher (The Game Engine)
+### 🎮 Gameplay Mechanics
+- **2–10 player** hot-seat multiplayer on a single terminal
+- **Automatic turn management** — direction, skip, and advance logic all handled by the `Game` engine
+- **Forced draw** — if a player has no playable card, one is drawn automatically; if still unplayable, the turn is passed
+- **Color selection** — prompted interactively whenever a Wild or Wild Draw Four is played
+- **Win detection** — the game ends immediately when any player empties their hand
 
-The `Game` class acts as the central state machine and dispatcher. It tracks the `currentPlayer`, turn `direction` (forward/backward), and the `topCard`. It safely exposes mutators like `reverseDirection()` and `drawCard()` which action cards hook into during their `applyEffect()` routines.
+### 🖥️ Terminal Card Display
 
-### 3. Memory & Entity Management
+Every card renders as a bordered ASCII art block:
 
-Entities such as the `Deck` and `Player` hands utilize `std::vector` for memory-safe, dynamically resizing contiguous arrays.
+```
++-------+
+| RED   |
+| DRAW  |
+| +2    |
++-------+
 
-- **Deck Allocation:** Instantiates all 108 predefined standard UNO cards natively.
-- **Player State:** Encapsulated cleanly; players push and pop pointers to `Card` objects without re-allocating heavy structures during runtime.
-- **Ownership Model:** `Deck` owns cards on initialization. Once drawn, ownership transfers to the `Player`. Played cards are tracked in a discard pile owned by `Game`. Each destructor only deletes what it owns — no double-free issues.
++-------+
+| WILD  |
+| WILD  |
+|       |
++-------+
+
++-------+
+| BLUE  |
+| 7     |
+|       |
++-------+
+```
+
+### 📋 Built-in Rules Reference
+A full in-game rules display is accessible from the main menu at any time, covering all card types, gameplay flow, and win conditions.
 
 ---
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```text
-uno-engine/
+UNO/
 ├── include/
-│   ├── Card.h     
-│   ├── Deck.h  
-│   ├── Game.h        
-│   ├── Player.h   
-│   ├── Functions.h   
+│   ├── Card.h          # Card base class + all 6 derived card type declarations
+│   ├── Deck.h          # Deck class — 108-card construction and draw logic
+│   ├── Game.h          # Game state engine — turn, direction, top card, discard pile
+│   ├── Player.h        # Player class — hand management, card play, draw
+│   └── functions.h     # Top-level game flow function declarations
+│
 ├── src/
-│   ├── Card.cpp    
-│   ├── Deck.cpp 
-│   ├── Game.cpp       
-│   ├── Player.cpp
-│   ├── Functions.cpp        
-│   ├── main.cpp   
-├── LICENSE      
-└── README.md  
+│   ├── Card.cpp        # Card base + NumberCard, SkipCard, ReverseCard,
+│   │                   # DrawTwoCard, WildCard, WildDrawFourCard implementations
+│   ├── Deck.cpp        # Full deck construction and random draw implementation
+│   ├── Game.cpp        # Turn management, direction, color choice, discard pile
+│   ├── Player.cpp      # Hand operations, playability check, card rendering
+│   ├── functions.cpp   # mainMenu, startGame, setPlayers, displayRules
+│   └── main.cpp        # Entry point — seeds RNG, launches main menu
+│
+└── README.md           # Project documentation
 ```
 
 ---
 
-## Build & Run Instructions
+## 🚀 Getting Started
 
-The UNO engine has zero external dependencies, compiling cleanly across major platforms utilizing standard C++ compilers (GCC, Clang, or MSVC).
+### Prerequisites
+A C++17-compatible compiler: `g++` (GCC 8+) or `clang++`.
 
-### GCC Compilation
+### Compilation
 
 ```bash
-g++ *.cpp -o uno -Wall -std=c++17
+g++ -std=c++17 -Iinclude src/*.cpp -o uno
 ```
 
-### Execution
+### Running the Game
 
 ```bash
 # Unix / macOS / Linux
 ./uno
 
 # Windows
-uno.exe
+.\uno
+```
+
+### Gameplay Walkthrough
+
+```
+=============================
+           UNO GAME
+=============================
+1. Start New Game
+2. Game Rules
+3. Exit
+-------------------------------
+Enter your choice: 1
+
+Enter the Number of Players: 3
+Enter the name of Player 1: Alice
+Enter the name of Player 2: Bob
+Enter the name of Player 3: Carol
+
+Displaying Top Card:
++-------+
+| GREEN |
+| 5     |
+|       |
++-------+
+
+Player 1 Hand:
++-------+    +-------+    +-------+
+| GREEN |    | RED   |    | WILD  |
+| 7     |    | SKIP  |    | WILD  |
+|       |    |       |    |       |
++-------+    +-------+    +-------+
+...
+
+Player Alice
+Enter your Card Number: 1
 ```
 
 ---
 
-## Game Mechanics Reference
+## 🧠 Design Decisions
 
-The engine inherently enforces strict standard UNO rules.
+**Why a polymorphic card hierarchy?**
+Each card type has fundamentally different playability rules and game effects. Polymorphism through `isPlayable()` and `applyEffect()` virtual overrides keeps each card's behavior fully self-contained — adding a new card type requires no changes to the game loop.
 
-### Supported Card Types
+**Why does `applyEffect()` take a `Game&` reference?**
+Cards need to trigger actions on the game state (draw cards, skip players, reverse direction, choose a color). Passing the `Game` by reference gives each card full access to the engine interface without tight coupling or global state.
 
-| Card Class | Behavior Detail | Inheritance Base |
-|------------|----------------|-----------------|
-| `NumberCard` | Validates against matching color or number. | `Card` |
-| `SkipCard` | Calls `game.skipNextPlayer()`. | `Card` |
-| `ReverseCard` | Calls `game.reverseDirection()`. | `Card` |
-| `DrawTwoCard` | Forces next player to draw 2; skips turn. | `Card` |
-| `WildCard` | Can be played on anything; prompts color change. | `Card` |
-| `WildDrawFourCard` | Changes color; forces next player to draw 4. | `Card` |
+**Why random-index removal instead of a shuffle?**
+Removing a card at a random index from the deck vector directly simulates drawing from a shuffled pile without requiring a separate shuffle pass — and ensures that every draw throughout the game remains unpredictable.
 
----
-
-### Engine Enforcement
-
-- **Validation:** Cards are checked via `isPlayable(topCard)` before a move is accepted.
-- **Draw Enforcement:** If a `Player` calls `hasPlayableCard(topCard)` and it returns false, the engine mandates a deck draw.
-- **Win Condition:** Determined when `Player::isHandEmpty()` evaluates to true.
+**Why a discard pile separate from the top card?**
+The `topCard` pointer owns the currently active card for playability checks and color reads. When a new card is played, the old top card is moved to the discard pile vector, keeping ownership clear and ensuring all cards are freed exactly once at game end.
 
 ---
 
-## Design Decisions
+## ⚠️ Current Limitations
 
-- **Why polymorphic cards instead of Enums?** Utilizing `virtual void applyEffect()` delegates logic to the specific card instance. This prevents the `Game` loop from needing to know how a card works, strictly adhering to the Open-Closed Principle (OCP).
-- **Why pass pointers instead of values?** Card objects are instantiated once in the `Deck`. Moving `Card*` pointers between the `Deck`, `Player` hands, and `topCard` minimizes memory overhead and prevents object slicing.
-- **Why decouple the Game state from the players?** `Player` only manages hand sizing and indexing (`playCard`). Determining whose turn is next belongs strictly to the `Game` dispatcher.
-
----
-
-## Current Limitations
-
-- **No GUI:** Operates strictly via a terminal interface.
-- **No Network Stack:** Local pass-and-play only.
-- **No Bot AI:** No automated opponents yet.
-- **No UNO Call Mechanic:** Rule documented but not implemented.
+- No UNO call mechanic (penalty for failing to declare UNO on last card)
+- No AI / computer-controlled players — hot-seat human players only
+- No score tracking or multi-round sessions
+- Deck is not reshuffled from the discard pile when exhausted
+- No save / load functionality
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-- **Heuristic AI Opponents**
-- **Networked Multiplayer Protocol**
-- **GUI Integration (SFML / ImGui)**
-- **Smart Pointer Refactor (`std::shared_ptr` / `std::unique_ptr`)**
-
----
-
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+- **UNO Call System** — detect single-card hands and apply a 2-card penalty for missed declarations
+- **AI Players** — rule-based computer opponents with configurable difficulty
+- **Score Tracking** — point accumulation across multiple rounds using standard UNO scoring
+- **Discard Pile Reshuffle** — automatically reshuffle the discard pile into the draw deck when it runs out
+- **Color-coded Terminal Output** — ANSI escape codes to render each card in its actual color
 
 ---
 
-<p align="center">
-  <i>Developed to explore object-oriented design and game loop architectures in C++.</i>
-</p>
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
